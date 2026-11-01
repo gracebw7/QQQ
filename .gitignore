@@ -1,0 +1,50 @@
+# Python environments
+.venv/
+venv/
+env/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tests and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# API keys and local configuration
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Downloaded papers and generated document content
+data/raw/
+data/processed/
+data/embeddings/
+
+# Local database files, if stored inside this repository
+postgres-data/
+pgdata/
+*.sql.dump
+
+# Model downloads and training outputs
+.cache/
+models/
+checkpoints/
+outputs/
+runs/
+wandb/
+
+# Notebook temporary files
+.ipynb_checkpoints/
+
+# Logs and operating-system files
+*.log
+.DS_Store
+Thumbs.db
