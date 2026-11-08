@@ -6,10 +6,13 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "arxiv>=4.0.2",
+    "fastapi>=0.162.2",
+    "httpx>=0.28.1",
     "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.6",
     "pydantic>=2.14.2",
     "pymupdf4llm>=2.0",
+    "pytest>=9.2.0",
     "python-dotenv>=1.2.4",
     "sentence-transformers>=6.2.0",
     "spacy>=3.8.18",
