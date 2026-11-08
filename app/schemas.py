@@ -7,6 +7,7 @@ class SearchRequest(BaseModel):
     query: str
     max_results: int = Field(default=5, ge=1, le=20)
     @field_validator("query")
+    @classmethod
     def query_must_not_be_empty(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("Query must not be empty")
