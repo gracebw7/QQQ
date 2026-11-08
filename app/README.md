@@ -1,3 +1,10 @@
+## Run App
+
+```text
+Start backend: uv run uvicorn app.api:app --reload
+Run frontend: uv run streamlit run main.py
+```
+
 ## API Documentation
 
 Start the FastAPI backend:
