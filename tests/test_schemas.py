@@ -47,7 +47,7 @@ def test_paper_result_accepts_download_outcomes(status, response_data):
     data = response_data["papers"][0]
     data["download_status"] = status
     if status == "failed":
-        data.update(local_pdf_url=None, download_error="Download timed out")
+        data.update(download_error="Download timed out")
     result = PaperResult(**data)
     assert result.model_dump(mode="json") == data
 

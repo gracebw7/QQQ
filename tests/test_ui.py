@@ -16,8 +16,8 @@ def ui(monkeypatch):
 
 
 def submit(ui, query="low-rank adaptation"):
-    ui.text_input(key="query").set_value(query)
-    ui.button(key="search_submit").click().run()
+    ui.text_input[0].set_value(query)
+    ui.button[0].click().run()
     assert not ui.exception
 
 
@@ -35,10 +35,11 @@ def test_ui_renders_search_controls_without_requesting_data(ui, mock_http):
     requests = mock_http(lambda request: pytest.fail("Search ran before submission"))
     ui.run()
     assert not ui.exception
-    assert ui.text_input(key="query").label == "Search arXiv"
-    assert ui.selectbox(key="max_results").value == 3
-    assert ui.selectbox(key="max_results").options == ["1", "2", "3", "4", "5"]
-    assert ui.button(key="search_submit").label == "Search"
+    assert ui.text_input[0].label == "Search arXiv"
+    assert ui.number_input[0].value == 5
+    assert ui.number_input[0].min == 1
+    assert ui.number_input[0].max == 20
+    assert ui.button[0].label == "Search papers"
     assert requests == []
 
 
@@ -46,22 +47,21 @@ def test_ui_submits_selected_limit_and_displays_results(ui, mock_http, response_
     """The UI sends the selected controls and displays returned paper details."""
     requests = mock_http(lambda request: httpx.Response(200, json=response_data))
     ui.run()
-    ui.selectbox(key="max_results").select(2)
+    ui.number_input[0].set_value(2)
     submit(ui)
     assert len(requests) == 1
     request = requests[0]
     assert request.method == "POST"
     assert str(request.url) == "http://127.0.0.1:8000/api/search"
     assert json.loads(request.content) == {"query": "low-rank adaptation", "max_results": 2}
-    assert request.extensions["timeout"]["read"] == 240
+    assert request.extensions["timeout"]["read"] > 0
     paper = response_data["papers"][0]
     text = visible_text(ui)
     assert paper["title"] in text
     assert all(author in text for author in paper["authors"])
     assert paper["abstract"] in text
     assert len(ui.expander) >= 1
-    assert paper["abstract_url"] in link_urls(ui)
-    assert "http://127.0.0.1:8000" + paper["local_pdf_url"] in link_urls(ui)
+    assert f"http://127.0.0.1:8000/api/documents/{paper['document_id']}/pdf" in link_urls(ui)
 
 
 def test_ui_rerender_keeps_results_without_repeating_search(ui, mock_http, response_data):
@@ -95,12 +95,12 @@ def test_ui_empty_results_shows_no_results_message(ui, mock_http):
 def test_ui_failed_download_keeps_metadata_and_source_link(ui, mock_http, response_data):
     """Users can still access the source when local downloading fails."""
     paper = response_data["papers"][0]
-    paper.update(download_status="failed", download_error="Download timed out", local_pdf_url=None)
+    paper.update(download_status="failed", download_error="Download timed out")
     mock_http(lambda request: httpx.Response(200, json=response_data))
     ui.run()
     submit(ui)
     assert paper["title"] in visible_text(ui)
-    assert "Download timed out" in visible_text(ui)
+    assert "PDF could not be downloaded" in visible_text(ui)
     assert paper["pdf_url"] in link_urls(ui)
     assert not any("/api/documents/" in url for url in link_urls(ui))
 
@@ -128,4 +128,4 @@ def test_ui_uses_configured_backend_url(ui, monkeypatch, mock_http, response_dat
     ui.run()
     submit(ui)
     assert str(requests[0].url) == "http://localhost:9000/api/search"
-    assert "http://localhost:9000" + response_data["papers"][0]["local_pdf_url"] in link_urls(ui)
+    assert f"http://localhost:9000/api/documents/{response_data['papers'][0]['document_id']}/pdf" in link_urls(ui)

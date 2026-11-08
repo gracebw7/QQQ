@@ -1,6 +1,5 @@
 """Shared fixtures; only integration tests may contact live services."""
 
-import hashlib
 import json
 import urllib.request
 from pathlib import Path
@@ -33,7 +32,7 @@ def paper_data():
 
 @pytest.fixture
 def document_id(paper_data):
-    return hashlib.sha256(paper_data["arxiv_id"].encode()).hexdigest()
+    return paper_data["document_id"]
 
 
 @pytest.fixture
@@ -42,9 +41,9 @@ def response_data(paper_data, document_id):
         "query": "low-rank adaptation",
         "papers": [{
             **paper_data,
+            "published": paper_data["published"].replace("+00:00", "Z"),
             "document_id": document_id,
             "download_status": "downloaded",
-            "local_pdf_url": f"/api/documents/{document_id}/pdf",
             "download_error": None,
         }],
     }

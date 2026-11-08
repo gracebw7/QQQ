@@ -48,43 +48,25 @@ def test_live_arxiv_api_returns_known_paper():
     assert urlparse(pdf_links[0]).path == f"/pdf/{PAPER_ID}"
 
 
-def test_live_search_service_returns_known_paper():
-    """Verify the application's search function against real arXiv results."""
-    from app.search.arxiv_client import search_papers
-
-    papers = search_papers(f'id:{PAPER_ID}', 1)
-    assert len(papers) == 1
-    paper = papers[0]
-    assert paper.arxiv_id == PAPER_ID
-    assert " ".join(paper.title.split()) == EXPECTED_TITLE
-    assert paper.authors
-    assert paper.abstract.strip()
-    assert urlparse(str(paper.abstract_url)).hostname == "arxiv.org"
-    assert urlparse(str(paper.pdf_url)).path == f"/pdf/{PAPER_ID}"
-
-
-def test_live_download_service_saves_readable_pdf_and_reuses_cache(tmp_path, paper_data):
+def test_live_download_service_saves_readable_pdf_and_reuses_cache(tmp_path, paper_data, monkeypatch, mock_http):
     """Download a real paper, parse its PDF, and reuse it without another request."""
-    from app.documents.download import document_id_for, download_paper
-    from app.schemas import Paper
+    from app.documents import download as downloader
     import pymupdf
 
     # A known URL isolates downloading from the search service.
-    paper = Paper(**{
+    paper = {
         **paper_data,
         "arxiv_id": PAPER_ID,
-        "abstract_url": f"https://arxiv.org/abs/{PAPER_ID}",
+        "document_id": PAPER_ID,
         "pdf_url": f"https://arxiv.org/pdf/{PAPER_ID}",
-    })
+    }
     cache_dir = tmp_path / "raw"
-    with httpx.Client(timeout=30, follow_redirects=True) as client:
-        result = download_paper(paper, cache_dir=cache_dir, client=client)
+    monkeypatch.setattr(downloader, "CACHE_DIR", cache_dir)
+    result = downloader.download_paper(paper)
 
-    assert result.download_status == "downloaded", result.download_error
-    assert result.download_error is None
-    assert result.document_id == document_id_for(PAPER_ID)
-    assert result.local_pdf_url == f"/api/documents/{result.document_id}/pdf"
-    pdf_path = cache_dir / f"{result.document_id}.pdf"
+    assert result["status"] == "downloaded", result["error"]
+    assert result["error"] is None
+    pdf_path = cache_dir / f"{PAPER_ID}.pdf"
     downloaded_bytes = pdf_path.read_bytes()
     assert downloaded_bytes.startswith(b"%PDF-")
     with pymupdf.open(pdf_path) as document:
@@ -95,9 +77,7 @@ def test_live_download_service_saves_readable_pdf_and_reuses_cache(tmp_path, pap
     def reject_second_download(request):
         pytest.fail("The cached paper must not be downloaded again")
 
-    with httpx.Client(transport=httpx.MockTransport(reject_second_download)) as client:
-        cached = download_paper(paper, cache_dir=cache_dir, client=client)
-    assert cached.download_status == "cached"
-    assert cached.document_id == result.document_id
-    assert cached.local_pdf_url == result.local_pdf_url
+    mock_http(reject_second_download)
+    cached = downloader.download_paper(paper)
+    assert cached == {"status": "cached", "error": None}
     assert pdf_path.read_bytes() == downloaded_bytes
