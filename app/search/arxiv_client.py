@@ -1,5 +1,6 @@
 import arxiv
 import re
+from urllib.parse import urlsplit
 
 client = arxiv.Client()
 
@@ -8,7 +9,7 @@ def search_papers(query: str, max_results: int = 5) -> list[dict]:
     papers = []
     seen_ids = set()
     for result in client.results(search):
-        arxiv_id = result.entry_id.rstrip("/").split("/")[-1]
+        arxiv_id = urlsplit(result.entry_id).path.split("/abs/", 1)[-1]
         if arxiv_id in seen_ids:
             continue
         seen_ids.add(arxiv_id)
