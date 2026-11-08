@@ -13,3 +13,31 @@ When the user asks a question:
 for every claim and select the citation to view the sentence in the referenced document PDF
 If the model can’t find sufficient evidence, it responds with a clear abstention statement, i.e.
 “Unable to find an answer in desired database documents.”
+
+
+# Repo File Structure:
+
+```text
+QQQ/
+|-- main.py                      # Simple Streamlit UI
+|-- app/
+|   |-- __init__.py
+|   |-- schemas.py               # Search request and paper response models
+|   |-- api.py                   # HTTP endpoints
+|   |-- search/
+|   |   |-- __init__.py
+|   |   |-- arxiv_client.py      # arXiv search and result normalization
+|   |   |-- prompts/             # Model prompts
+|   |-- documents/              # PDF processing
+|-- tests/
+|   |-- fixtures/
+|-- scripts/                    # Utility scripts
+|-- docs/
+|   |-- sys-arch.pdf
+|-- data/                       # Local generated data (ignored by Git)
+|   |-- raw/
+|   |-- processed/
+|-- .gitignore
+|-- pyproject.toml
+|-- uv.lock
+```
