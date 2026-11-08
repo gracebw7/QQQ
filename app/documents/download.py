@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlsplit, urljoin
 
 import httpx
+import pymupdf
 
 CACHE_DIR = Path("data/raw")
 MAX_SIZE = 50 * 1024 * 1024  # 50 MB
@@ -34,8 +35,19 @@ def valid_pdf(path: Path) -> bool:
     if not 8 <= path.stat().st_size <= MAX_SIZE:
         return False
 
-    with path.open("rb") as file:
-        return file.read(5) == b"%PDF-"
+    try:
+        with path.open("rb") as file:
+            if file.read(5) != b"%PDF-":
+                return False
+        with pymupdf.open(path) as document:
+            if not document.is_pdf or document.needs_pass or document.page_count == 0:
+                return False
+            # Parse every page before accepting the file into the cache.
+            for page in document:
+                page.get_text()
+        return True
+    except (OSError, RuntimeError, ValueError):
+        return False
 
 
 def download_paper(paper: dict) -> dict:
