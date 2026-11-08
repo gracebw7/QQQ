@@ -9,7 +9,8 @@ class SearchRequest(BaseModel):
     @field_validator("query")
     @classmethod
     def query_must_not_be_empty(cls, value: str) -> str:
-        if not value.strip():
+        value = value.strip()
+        if not value:
             raise ValueError("Query must not be empty")
         return value
 

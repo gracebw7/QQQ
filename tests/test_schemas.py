@@ -4,13 +4,13 @@ import pytest
 from pydantic import ValidationError
 
 
-def test_search_request_trims_query_and_defaults_to_three_results():
+def test_search_request_trims_query_and_defaults_to_five_results():
     """Normalize useful input before it reaches arXiv."""
     from app.schemas import SearchRequest
 
     request = SearchRequest(query="  low-rank adaptation  ")
     assert request.query == "low-rank adaptation"
-    assert request.max_results == 3
+    assert request.max_results == 5
 
 
 @pytest.mark.parametrize("query", ["", " ", "\n\t"])
@@ -22,7 +22,7 @@ def test_search_request_rejects_blank_query(query):
         SearchRequest(query=query)
 
 
-@pytest.mark.parametrize("count", [0, -1, 6])
+@pytest.mark.parametrize("count", [0, -1, 21])
 def test_search_request_rejects_result_count_outside_limits(count):
     """Keep automatic downloads within the agreed limit."""
     from app.schemas import SearchRequest
@@ -31,7 +31,7 @@ def test_search_request_rejects_result_count_outside_limits(count):
         SearchRequest(query="LoRA", max_results=count)
 
 
-@pytest.mark.parametrize("count", [1, 5])
+@pytest.mark.parametrize("count", [1, 20])
 def test_search_request_accepts_result_count_boundaries(count):
     """Both ends of the supported range are valid."""
     from app.schemas import SearchRequest
