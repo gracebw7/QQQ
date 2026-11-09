@@ -1,0 +1,20 @@
+services:
+  pg-vd:
+    image: pgvector/pgvector:pg18-trixie
+    environment:
+      POSTGRES_DB: qqq
+      POSTGRES_USER: qqq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before starting the database}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pg_vd_data:/var/lib/postgresql
+      - ./pg-vd.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qqq -d qqq"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  pg_vd_data:
