@@ -16,12 +16,33 @@ When the user asks a question:
   If the model can’t find sufficient evidence, it responds with a clear abstention statement, i.e.
   “Unable to find an answer in desired database documents.”
 
-# Run App:
+## Setup and run
 
-```text
-Run backend: uv run uvicorn app.api:app --reload
-Run frontend: uv run streamlit run main.py
-Run tests: uv run pytest
+Install `uv`, then open a terminal in the `QQQ` project folder.
+
+```powershell
+# Install project dependencies (creates .venv automatically)
+uv sync
+
+# Start the backend
+uv run --with uvicorn uvicorn app.api:app --reload
+```
+
+Open a second terminal in the same folder and start the UI:
+
+```powershell
+uv run streamlit run main.py
+```
+
+Open http://localhost:8501 to use the app. Keep both terminals running.
+Searches and PDF downloads require internet access.
+
+```powershell
+# Run tests (includes live arXiv requests)
+uv run pytest
+
+# Run only offline tests
+uv run pytest -m "not integration"
 ```
 
 # Repo File Structure:
