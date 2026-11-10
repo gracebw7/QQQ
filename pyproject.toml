@@ -8,7 +8,12 @@ dependencies = [
     "arxiv>=4.0.2",
     "fastapi>=0.162.2",
     "httpx>=0.28.1",
+<<<<<<< HEAD
     "markdown-it-py>=4.2.0",
+=======
+    "langchain>=1.4.9",
+    "langchain-anthropic>=1.7.10",
+>>>>>>> d8b9822 (Created distillation functions and schema)
     "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.6",
     "pydantic>=2.14.2",
