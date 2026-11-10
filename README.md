@@ -45,6 +45,34 @@ uv run pytest
 uv run pytest -m "not integration"
 ```
 
+## PostgreSQL vector store
+
+We use PostgreSQL with the pgvector extension to store documents and find passages
+that are relevant to a question. The database has three tables:
+
+- `documents` stores each paper's source information and full Markdown text.
+- `chunks` stores sentence groups, their exact text, embeddings, and Markdown line ranges.
+- `page_lines` optionally maps Markdown line ranges to PDF pages for citations.
+
+The main helpers live in [vec_func.py](app/vector_store/vec_func.py):
+
+| Function | What it does |
+| --- | --- |
+| `parse_and_save(markdown, external_id, ...)` | Takes a Markdown string, normalizes line endings, parses paragraphs, and groups whole sentences using spaCy (three per chunk by default). It generates embeddings, then saves the document, chunks, and any supplied page mappings in one transaction. Returns the new document ID. |
+| `search_chunks(conn, embedding, limit=6, document_id=None)` | Takes an embedded question and returns the closest chunks by cosine distance. Results include the exact chunk text, similarity scores, source information, Markdown line ranges, and any matching PDF page numbers. Searches all documents unless a document ID is supplied. |
+
+The embedding model is
+[sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2),
+which maps sentences and short paragraphs to 384-dimensional vectors. We normalize
+the embeddings and use the same model for document chunks and questions. The model
+truncates inputs longer than 256 word pieces, so very long chunks may lose some
+context in their embeddings even though their full text is stored.
+
+### Database Set Up
+
+See the [vector store guide](app/vector_store/README.md) for the full schema,
+helper functions, and Docker setup. 
+
 # Repo File Structure:
 
 ```text
